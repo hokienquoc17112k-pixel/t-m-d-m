@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>QuocRoblox - Nền tảng Roblox 3D Siêu Cấp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050510;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        /* INTRO 3D */
+        .intro-3d {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #0a0a2a, #020210);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: introFadeOut 1s ease-in-out 4.5s forwards;
+            pointer-events: none;
+        }
+        @keyframes introFadeOut { to { opacity: 0; visibility: hidden; } }
+        .intro-3d-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            will-change: transform;
+        }
+        .intro-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            animation: introZoom 1.2s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        }
+        @keyframes introZoom {
+            0% { transform: scale(0.3) rotateY(-30deg); opacity: 0; filter: blur(10px); }
+            100% { transform: scale(1) rotateY(0deg); opacity: 1; filter: blur(0); }
+        }
+        .intro-logo { font-size: 5rem; font-weight: 900; background: linear-gradient(135deg, #ffd89b, #c7e9fb, #f6d365, #ff6b6b); -webkit-background-clip: text; background-clip: text; color: transparent; animation: logoGlow 1.5s ease-in-out infinite alternate; }
+        @keyframes logoGlow { from { text-shadow: 0 0 20px rgba(255,200,100,0.3); } to { text-shadow: 0 0 60px rgba(255,200,100,0.8); } }
+        .intro-slogan { font-size: 1.1rem; letter-spacing: 4px; color: rgba(255,255,255,0.9); margin-bottom: 1.5rem; }
+        .intro-progress { width: 200px; height: 2px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 0 auto; overflow: hidden; }
+        .intro-progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #ffaa33, #ff6600); animation: progressLoad 4s linear forwards; }
+        @keyframes progressLoad { to { width: 100%; } }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform;
+        }
+        .content { position: relative; z-index: 10; }
+        
+        /* Bong bóng chat */
+        .chat-bubble {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            cursor: pointer;
+            animation: floatBubble 2s ease-in-out infinite;
+        }
+        @keyframes floatBubble { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        .chat-bubble-inner {
+            background: linear-gradient(135deg, #5865F2, #404EED);
+            border-radius: 50px;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 20px rgba(88,101,242,0.4);
+        }
+        .chat-bubble-icon { width: 36px; height: 36px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: #5865F2; }
+        .chat-bubble-text { display: flex; flex-direction: column; }
+        .chat-bubble-title { font-weight: bold; font-size: 0.85rem; color: white; }
+        .chat-bubble-message { font-size: 0.65rem; color: rgba(255,255,255,0.9); display: flex; align-items: center; gap: 5px; }
+        .chat-bubble-message i { font-size: 0.55rem; animation: textPulse 1s infinite; }
+        @keyframes textPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        .chat-badge { position: absolute; top: -5px; right: -5px; background: #ff4757; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; }
+        
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 5%;
+            background: rgba(5, 5, 30, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+        .logo { font-size: 1.3rem; font-weight: 800; background: linear-gradient(135deg, #fff, #ffcc00, #ff6600); -webkit-background-clip: text; background-clip: text; color: transparent; cursor: pointer; }
+        .nav-links { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+        .nav-links a { color: #fff; text-decoration: none; font-weight: 500; transition: 0.3s; cursor: pointer; font-size: 0.8rem; }
+        .nav-links a:hover { color: #ffaa00; }
+        .balance-info { background: linear-gradient(135deg, #ffaa33, #ff6600); padding: 0.3rem 0.8rem; border-radius: 40px; display: flex; align-items: center; gap: 0.4rem; font-weight: bold; font-size: 0.8rem; cursor: pointer; }
+        .cart-icon { position: relative; cursor: pointer; font-size: 1.2rem; color: #ffaa33; }
+        .cart-count { position: absolute; top: -8px; right: -10px; background: #ff6600; color: white; font-size: 0.6rem; padding: 2px 5px; border-radius: 50%; }
+        .user-info { display: flex; align-items: center; gap: 0.6rem; background: rgba(255,255,255,0.1); padding: 0.2rem 0.8rem; border-radius: 40px; cursor: pointer; }
+        .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #ffaa33, #ff6600); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; }
+        .btn-outline-light { background: transparent; border: 1px solid rgba(255,255,255,0.3); padding: 0.3rem 0.8rem; border-radius: 40px; color: white; cursor: pointer; font-size: 0.75rem; }
+        
+        /* Hero */
+        .hero { min-height: 80vh; display: flex; align-items: center; justify-content: space-between; padding: 0 5%; flex-wrap: wrap; gap: 2rem; }
+        .hero-left { flex: 1; min-width: 280px; }
+        .hero-left h1 { font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, #FFFFFF, #FFD966, #FF9933); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 1rem; }
+        .hero-left p { font-size: 0.9rem; color: #ccc; margin-bottom: 1.5rem; }
+        .stats { display: flex; gap: 1.2rem; margin: 1.5rem 0; flex-wrap: wrap; }
+        .stat-item { text-align: center; padding: 0.4rem 0.8rem; background: rgba(255,255,255,0.05); border-radius: 16px; }
+        .stat-item h3 { font-size: 1.3rem; color: #ffaa33; }
+        .btn-glow { background: linear-gradient(95deg, #ff6600, #ffcc00); border: none; padding: 0.7rem 1.5rem; border-radius: 60px; font-weight: bold; cursor: pointer; }
+        .hero-right { flex: 1; display: flex; justify-content: center; }
+        .card-3d-preview { background: rgba(15, 15, 35, 0.6); backdrop-filter: blur(12px); border-radius: 28px; padding: 1.2rem; text-align: center; width: 240px; transition: 0.3s; border: 1px solid rgba(255,255,255,0.2); }
+        .card-3d-preview i { font-size: 2.5rem; color: #ffcc00; }
+        
+        /* Category Tabs */
+        .category-tabs { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; }
+        .category-tab { padding: 0.4rem 1rem; background: rgba(255,255,255,0.05); border-radius: 40px; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
+        .category-tab:hover { background: rgba(255,255,255,0.15); }
+        .category-tab.active { background: linear-gradient(135deg, #ffaa33, #ff6600); color: #1a1a2e; }
+        
+        /* Products - SCROLL REVEAL */
+        .products {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.2rem;
+        }
+        .product-item {
+            background: linear-gradient(145deg, rgba(17,17,40,0.9), rgba(8,8,24,0.9));
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 1rem;
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            opacity: 0;
+            transform: translateY(30px);
+            will-change: transform, opacity;
+        }
+        .product-item.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .product-item:hover { transform: translateY(-5px) scale(1.01); border-color: #ffaa33; }
+        .product-icon { font-size: 1.8rem; color: #ffaa33; margin-bottom: 0.5rem; }
+        .product-name { font-size: 1rem; font-weight: 700; margin: 0.3rem 0; }
+        .product-desc { font-size: 0.7rem; color: #aaa; margin-bottom: 0.3rem; }
+        .product-price { font-size: 1.2rem; font-weight: 800; color: #ffaa33; margin: 0.3rem 0; }
+        .btn-buy { background: #ff6600; border: none; padding: 0.4rem 0.8rem; border-radius: 40px; font-weight: 600; margin-top: 0.5rem; cursor: pointer; width: 100%; font-size: 0.75rem; }
+        
+        /* Sections */
+        .section { padding: 2rem 5%; text-align: center; }
+        .section-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; background: linear-gradient(120deg, #fff, #ffaa66); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+        .feature-card { background: rgba(20, 20, 45, 0.6); backdrop-filter: blur(8px); border-radius: 20px; padding: 1rem; transition: 0.3s; opacity: 0; transform: translateY(20px); will-change: transform, opacity; }
+        .feature-card.revealed { opacity: 1; transform: translateY(0); }
+        .feature-card:hover { transform: translateY(-3px); border: 1px solid rgba(255,170,51,0.3); }
+        .feature-icon { font-size: 1.6rem; color: #ffaa33; margin-bottom: 0.5rem; }
+        
+        /* Cart Sidebar */
+        .cart-sidebar {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 320px;
+            height: 100%;
+            background: rgba(10,10,26,0.98);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+        .cart-sidebar.open { right: 0; }
+        .cart-header { padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; }
+        .close-cart { cursor: pointer; }
+        .cart-items { flex: 1; overflow-y: auto; padding: 0.6rem; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .remove-item { background: #ff4757; border: none; padding: 0.2rem 0.5rem; border-radius: 20px; cursor: pointer; font-size: 0.65rem; }
+        .cart-total { padding: 0.6rem; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-weight: bold; }
+        .checkout-btn { background: linear-gradient(95deg, #2ed573, #00b894); margin: 0.6rem; padding: 0.5rem; border: none; border-radius: 40px; font-weight: bold; cursor: pointer; }
+        
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(12px); z-index: 1100; justify-content: center; align-items: center; }
+        .modal-content { background: rgba(17,17,40,0.95); backdrop-filter: blur(20px); border-radius: 24px; max-width: 450px; width: 90%; padding: 1.2rem; border: 1px solid rgba(255,255,255,0.2); max-height: 85vh; overflow-y: auto; }
+        .avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; margin: 1rem 0; }
+        .avatar-option { width: 60px; height: 60px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+        .avatar-option.selected { border-color: #ffaa33; box-shadow: 0 0 15px rgba(255,170,51,0.5); }
+        .input-field { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 40px; padding: 0.5rem 1rem; width: 100%; margin: 0.5rem 0; color: white; font-size: 0.8rem; }
+        .btn-primary { background: #ffaa33; color: #1a1a2e; padding: 0.4rem 0.8rem; border: none; border-radius: 40px; font-weight: bold; cursor: pointer; }
+        .btn-danger { background: #ff4757; padding: 0.4rem 0.8rem; border: none; border-radius: 40px; cursor: pointer; color: white; }
+        .recharge-options { display: flex; gap: 0.6rem; margin: 0.8rem 0; }
+        .recharge-tab { flex: 1; text-align: center; padding: 0.4rem; background: rgba(255,255,255,0.05); border-radius: 40px; cursor: pointer; font-size: 0.75rem; }
+        .recharge-tab.active { background: #ffaa33; color: #1a1a2e; }
+        .bank-info { background: rgba(255,255,255,0.05); padding: 0.6rem; border-radius: 14px; margin: 0.6rem 0; }
+        .bank-row { display: flex; justify-content: space-between; padding: 0.3rem 0; font-size: 0.7rem; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+        .qr-code { text-align: center; margin: 0.5rem 0; }
+        .qr-code img { width: 100px; height: 100px; }
+        .history-item { background: rgba(255,255,255,0.05); border-radius: 14px; padding: 0.6rem; margin-bottom: 0.6rem; border-left: 3px solid #ffaa33; cursor: pointer; }
+        .history-status { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 20px; font-size: 0.6rem; font-weight: bold; }
+        .status-success { background: #2ed573; color: #fff; }
+        .status-pending { background: #ffaa33; color: #1a1a2e; }
+        .footer { text-align: center; padding: 1rem; color: #aaa; font-size: 0.7rem; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 1.5rem; }
+        
+        @media (max-width: 768px) {
+            .hero { flex-direction: column; text-align: center; padding-top: 1rem; }
+            .hero-left h1 { font-size: 1.8rem; }
+            .cart-sidebar { width: 100%; right: -100%; }
+            .products { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+            .category-tab { padding: 0.3rem 0.8rem; font-size: 0.7rem; }
+            .chat-bubble-inner { padding: 6px 12px; }
+            .chat-bubble-text .chat-bubble-title { font-size: 0.75rem; }
+            .chat-bubble-message { display: none; }
+        }
+        .toast-msg { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(31,31,58,0.95); backdrop-filter: blur(12px); padding: 6px 14px; border-radius: 60px; color: white; z-index: 1200; border-left: 3px solid #ffaa33; font-size: 0.75rem; animation: fadeUp 0.3s ease; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateX(-50%) translateY(15px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    </style>
+</head>
+<body>
+
+<!-- INTRO 3D -->
+<div class="intro-3d" id="intro3d">
+    <canvas id="introCanvas" class="intro-3d-canvas"></canvas>
+    <div class="intro-content">
+        <div class="intro-logo"><i class="fas fa-cube"></i> QuocRoblox</div>
+        <div class="intro-slogan">✦ 3D ULTRA | AUTO TRADING ✦</div>
+        <div class="intro-progress"><div class="intro-progress-bar"></div></div>
+    </div>
+</div>
+
+<div id="canvas-container"></div>
+
+<div class="content">
+    <div class="navbar">
+        <div class="logo" onclick="scrollToTop()"><i class="fas fa-cube"></i> QuocRoblox</div>
+        <div class="nav-links">
+            <a onclick="scrollToSection('home')">Trang chủ</a>
+            <a onclick="scrollToSection('products')">Kho acc</a>
+            <a onclick="openHistoryModal()"><i class="fas fa-history"></i> Lịch sử</a>
+            <div class="balance-info" id="balanceInfo" onclick="openRechargeModal()"><i class="fas fa-coins"></i> <span id="userBalance">0</span>đ</div>
+            <div class="cart-icon" onclick="toggleCart()"><i class="fas fa-shopping-cart"></i><span class="cart-count" id="cartCount">0</span></div>
+        </div>
+        <div id="authButton"></div>
+    </div>
+
+    <div id="home" class="hero">
+        <div class="hero-left">
+            <h1>Acc Roblox Siêu Cấp<br>3D Trading System</h1>
+            <p>Hơn 10.000 tài khoản được kiểm duyệt AI, bảo hành trọn đời. Hệ thống giao dịch 3D tự động với hơn 35+ loại acc đa dạng.</p>
+            <div class="stats"><div class="stat-item"><h3>35+</h3><div>Loại acc</div></div><div class="stat-item"><h3>7</h3><div>Danh mục</div></div><div class="stat-item"><h3>99.9%</h3><div>Hài lòng</div></div></div>
+            <button class="btn-glow" id="btnExplore"><i class="fas fa-rocket"></i> Khám phá ngay</button>
+        </div>
+        <div class="hero-right">
+            <div class="card-3d-preview" id="previewCard">
+                <i class="fas fa-crown"></i>
+                <h3 style="margin: 8px 0;">VIP ACCOUNT</h3>
+                <p>Limited + 15K Robux</p>
+                <div style="font-size: 1.2rem; color:#ffaa33;">1.599.000đ</div>
+                <button class="btn-buy" onclick="addToCart({id:4, name:'Acc Vip', price:1599000, category:'vip'})">Mua ngay</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">✨ Tại sao chọn chúng tôi? ✨</div>
+        <div class="features-grid" id="featuresGrid">
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-shield-alt"></i></div><h3>Bảo mật</h3><p>Mã hóa SSL 256-bit</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-bolt"></i></div><h3>Tự động</h3><p>Nhận acc ngay</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-chart-line"></i></div><h3>Giá tốt</h3><p>Cạnh tranh nhất</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-headset"></i></div><h3>Hỗ trợ 24/7</h3><p>CSKH chuyên nghiệp</p></div>
+        </div>
+    </div>
+
+    <div id="products" class="section">
+        <div class="section-title">🔥 KHO ACC 3D - 7 DANH MỤC 🔥</div>
+        <div class="category-tabs" id="categoryTabs"></div>
+        <div class="products" id="productsContainer"></div>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 QuocRoblox.NET - Nền tảng Roblox 3D Siêu Cấp | 35+ tài khoản chất lượng</p>
+    </div>
+</div>
+
+<!-- Bong bóng chat -->
+<div class="chat-bubble" id="chatBubble" onclick="openDiscord()">
+    <div class="chat-bubble-inner">
+        <div class="chat-bubble-icon"><i class="fab fa-discord"></i></div>
+        <div class="chat-bubble-text">
+            <span class="chat-bubble-title">💬 Liên hệ với chúng tôi</span>
+            <span class="chat-bubble-message"><i class="fas fa-circle"></i> Online 24/7</span>
+        </div>
+        <div class="chat-badge"><i class="fas fa-comment"></i></div>
+    </div>
+</div>
+
+<!-- Các modal -->
+<div class="modal-overlay" id="loginModal"><div class="modal-content"><h3 style="text-align:center;"><i class="fas fa-sign-in-alt"></i> Đăng nhập</h3><div id="googleLoginButton"></div><div style="text-align:center; margin:0.5rem;">Hoặc</div><input type="email" id="loginEmail" class="input-field" placeholder="Email"><input type="password" id="loginPassword" class="input-field" placeholder="Mật khẩu"><button class="btn-primary" style="width:100%;" onclick="handleEmailLogin()">Đăng nhập</button><button class="btn-primary" style="width:100%; background:transparent; border:1px solid #ffaa33; margin-top:0.5rem;" onclick="showRegisterForm()">Đăng ký</button><button class="btn-danger" style="width:100%; margin-top:0.8rem;" onclick="closeLoginModal()">Đóng</button></div></div>
+<div class="modal-overlay" id="registerModal"><div class="modal-content"><h3 style="text-align:center;"><i class="fas fa-user-plus"></i> Đăng ký</h3><input type="text" id="regName" class="input-field" placeholder="Họ tên"><input type="email" id="regEmail" class="input-field" placeholder="Email"><input type="password" id="regPassword" class="input-field" placeholder="Mật khẩu"><input type="password" id="regConfirm" class="input-field" placeholder="Xác nhận"><button class="btn-primary" style="width:100%;" onclick="handleRegister()">Đăng ký</button><button class="btn-danger" style="width:100%; margin-top:0.8rem;" onclick="closeRegisterModal()">Đóng</button></div></div>
+<div class="modal-overlay" id="profileModal"><div class="modal-content"><h3 style="text-align:center;"><i class="fas fa-user-edit"></i> Chỉnh sửa hồ sơ</h3><div style="text-align:center;"><div id="currentAvatarDisplay" class="user-avatar" style="width:70px; height:70px; margin:0 auto; font-size:1.8rem;"></div></div><div class="avatar-grid" id="avatarGrid"></div><input type="text" id="profileName" class="input-field" placeholder="Họ tên"><input type="email" id="profileEmail" class="input-field" placeholder="Email" readonly><input type="password" id="profilePassword" class="input-field" placeholder="Mật khẩu mới"><button class="btn-primary" style="width:100%;" onclick="updateProfile()">Cập nhật</button><button class="btn-danger" style="width:100%; margin-top:0.5rem;" onclick="closeProfileModal()">Đóng</button></div></div>
+<div class="modal-overlay" id="rechargeModal"><div class="modal-content"><h3 style="text-align:center;"><i class="fas fa-plus-circle"></i> Nạp tiền</h3><div class="recharge-options"><div class="recharge-tab active" onclick="switchRechargeTab('card')">💳 Thẻ cào</div><div class="recharge-tab" onclick="switchRechargeTab('bank')">🏦 Chuyển khoản</div></div><div id="cardRechargePanel"><select id="cardType" class="input-field"><option>Viettel</option><option>Mobifone</option><option>Vinaphone</option></select><input type="number" id="cardAmount" class="input-field" placeholder="Mệnh giá (10.000 - 5.000.000đ)"><input type="text" id="cardCode" class="input-field" placeholder="Mã thẻ"><input type="text" id="cardSerial" class="input-field" placeholder="Seri thẻ"><button class="btn-primary" style="width:100%;" onclick="rechargeByCard()">Nạp thẻ</button></div><div id="bankRechargePanel" style="display:none;"><div class="qr-code"><img id="bankQR" src=""></div><div class="bank-info"><div class="bank-row"><span>🏦 Ngân hàng:</span><span>TECHCOMBANK</span></div><div class="bank-row"><span>👤 Chủ TK:</span><span>QuocRoblox JSC</span></div><div class="bank-row"><span>🔢 Số TK:</span><span>1903 6789 0123 45</span></div></div><input type="number" id="bankAmount" class="input-field" placeholder="Số tiền nạp"><button class="btn-primary" style="width:100%;" onclick="rechargeByBank()">Xác nhận</button></div><button class="btn-danger" style="width:100%; margin-top:0.8rem;" onclick="closeRechargeModal()">Đóng</button></div></div>
+<div class="cart-sidebar" id="cartSidebar"><div class="cart-header"><span><i class="fas fa-shopping-cart"></i> Giỏ hàng</span><span class="close-cart" onclick="toggleCart()"><i class="fas fa-times"></i></span></div><div class="cart-items" id="cartItems"><div style="text-align:center; padding:1rem;">Chưa có sản phẩm</div></div><div class="cart-total" id="cartTotal" style="display:none;">Tổng: <span id="totalAmount">0</span></div><button class="checkout-btn" id="checkoutBtn" style="display:none;" onclick="openPayment()">💳 Thanh toán</button></div>
+<div class="modal-overlay" id="paymentModal"><div class="modal-content"><h3><i class="fas fa-qrcode"></i> Thanh toán</h3><input type="email" id="customerEmail" class="input-field" placeholder="📧 Email nhận thông tin"><div class="qr-code"><img id="qrImage" src=""></div><div class="bank-info"><div class="bank-row"><span>🏦 Ngân hàng:</span><span>TECHCOMBANK</span></div><div class="bank-row"><span>👤 Chủ TK:</span><span>QuocRoblox JSC</span></div><div class="bank-row"><span>🔢 Số TK:</span><span>1903 6789 0123 45</span></div><div class="bank-row"><span>📝 Nội dung:</span><span id="transferContent"></span></div></div><div style="display:flex; gap:0.5rem; justify-content:center;"><button class="btn-primary" onclick="checkCurrentOrder()"><i class="fas fa-search"></i> Kiểm tra</button><button class="btn-primary" onclick="confirmPayment()"><i class="fas fa-check"></i> Xác nhận</button><button class="btn-danger" onclick="closePayment()">Đóng</button></div></div></div>
+<div class="modal-overlay" id="historyModal"><div class="modal-content"><div style="display:flex; justify-content:space-between;"><h3><i class="fas fa-history"></i> Lịch sử</h3><span style="cursor:pointer;" onclick="closeHistoryModal()">&times;</span></div><div id="historyList"></div></div></div>
+<div class="modal-overlay" id="orderDetailModal"><div class="modal-content"><div style="display:flex; justify-content:space-between;"><h3><i class="fas fa-receipt"></i> Chi tiết</h3><span style="cursor:pointer;" onclick="closeOrderDetail()">&times;</span></div><div id="orderDetailContent"></div><button class="btn-primary" onclick="closeOrderDetail()">Đóng</button></div></div>
+
+<script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.128.0/build/three.module.js" } }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    
+    // Intro 3D nhẹ
+    const introCanvas = document.getElementById('introCanvas');
+    if(introCanvas){
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050510);
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 8);
+        const renderer = new THREE.WebGLRenderer({ canvas: introCanvas, alpha: false, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        const group = new THREE.Group();
+        const geometry = new THREE.IcosahedronGeometry(1.2, 0);
+        const material = new THREE.MeshStandardMaterial({ color: 0xffaa33, emissive: 0x442200, metalness: 0.8 });
+        const mesh = new THREE.Mesh(geometry, material);
+        group.add(mesh);
+        const ringGeo = new THREE.TorusGeometry(1.9, 0.07, 64, 200);
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0xff8844 });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        group.add(ring);
+        scene.add(group);
+        scene.add(new THREE.AmbientLight(0x333333));
+        const light = new THREE.DirectionalLight(0xffaa66, 1);
+        light.position.set(2, 3, 4);
+        scene.add(light);
+        let time = 0;
+        function animate(){
+            requestAnimationFrame(animate);
+            time += 0.01;
+            group.rotation.y = time * 0.5;
+            ring.rotation.x = time * 0.8;
+            renderer.render(scene, camera);
+        }
+        animate();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    }
+    
+    // Background 3D nhẹ
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050510);
+    scene.fog = new THREE.FogExp2(0x050510, 0.006);
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 2, 14);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+    
+    scene.add(new THREE.AmbientLight(0x222222));
+    const mainLight = new THREE.DirectionalLight(0xffaa66, 0.8);
+    mainLight.position.set(5, 10, 7);
+    scene.add(mainLight);
+    
+    const knotGeo = new THREE.TorusKnotGeometry(0.9, 0.22, 160, 24, 3, 4);
+    const knotMat = new THREE.MeshStandardMaterial({ color: 0xffaa33, emissive: 0x331100, metalness: 0.7 });
+    const knot = new THREE.Mesh(knotGeo, knotMat);
+    knot.position.set(2, 0.8, -2.5);
+    scene.add(knot);
+    
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.04, 64, 200), new THREE.MeshStandardMaterial({ color: 0xff8844 }));
+    ring2.position.set(-1.5, 0.3, -2);
+    scene.add(ring2);
+    
+    let t = 0;
+    function animateBg(){
+        requestAnimationFrame(animateBg);
+        t += 0.006;
+        knot.rotation.x += 0.006;
+        knot.rotation.y += 0.01;
+        ring2.rotation.x += 0.008;
+        ring2.rotation.z += 0.006;
+        camera.position.x += (0 - camera.position.x) * 0.02;
+        camera.lookAt(0, 0.5, 0);
+        renderer.render(scene, camera);
+    }
+    animateBg();
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+
+<script>
+    // Categories
+    const categories = [
+        { id: 'all', name: '🔥 TẤT CẢ', icon: 'fa-fire' },
+        { id: 'vip', name: '👑 VIP', icon: 'fa-crown' },
+        { id: 'game', name: '🎮 GAME HOT', icon: 'fa-gamepad' },
+        { id: 'limited', name: '💎 LIMITED', icon: 'fa-gem' },
+        { id: 'pet', name: '🐾 PET', icon: 'fa-paw' },
+        { id: 'vehicle', name: '🚗 XE CỘ', icon: 'fa-car' },
+        { id: 'tool', name: '⚔️ VŨ KHÍ', icon: 'fa-gun' }
+    ];
+    
+    const allProducts = [
+        { id: 1, name: "Acc Cơ bản", price: 199000, desc: "Skin đẹp, cấp 20+, 500 Robux", icon: "fas fa-gem", category: "vip" },
+        { id: 2, name: "Acc Pro", price: 699000, desc: "Limited hiếm + 5K Robux", icon: "fas fa-star", category: "vip" },
+        { id: 3, name: "Acc Vip", price: 1599000, desc: "Limited siêu hiếm + 15K Robux", icon: "fas fa-crown", category: "vip" },
+        { id: 4, name: "Acc Legend", price: 2599000, desc: "Tài khoản huyền thoại + 30K Robux", icon: "fas fa-dragon", category: "vip" },
+        { id: 5, name: "Acc Supreme", price: 3999000, desc: "Tài khoản tối thượng + 50K Robux", icon: "fas fa-crown", category: "vip" },
+        { id: 6, name: "Blox Fruit Max", price: 899000, desc: "Full Fruit, cấp max, 2K Robux", icon: "fas fa-apple-alt", category: "game" },
+        { id: 7, name: "Blox Fruit Legend", price: 1499000, desc: "Full Fruit + Dragon + 5K Robux", icon: "fas fa-dragon", category: "game" },
+        { id: 8, name: "Brookhaven God", price: 399000, desc: "Nhà đẹp, nhiều vật phẩm", icon: "fas fa-home", category: "game" },
+        { id: 9, name: "Brookhaven Mega", price: 799000, desc: "Full nhà + xe + 2K Robux", icon: "fas fa-mansion", category: "game" },
+        { id: 10, name: "Jailbreak King", price: 459000, desc: "Xe siêu cấp, 2K Robux", icon: "fas fa-car", category: "game" },
+        { id: 11, name: "Jailbreak Legend", price: 899000, desc: "Full xe limited + 5K Robux", icon: "fas fa-car-side", category: "game" },
+        { id: 12, name: "Arsenal Master", price: 299000, desc: "Full skin vũ khí, 800 Robux", icon: "fas fa-gun", category: "game" },
+        { id: 13, name: "Arsenal Pro", price: 599000, desc: "Full skin + knife hiếm + 2K", icon: "fas fa-crosshairs", category: "game" },
+        { id: 14, name: "Murder Mystery", price: 279000, desc: "Knife hiếm, 600 Robux", icon: "fas fa-khanda", category: "game" },
+        { id: 15, name: "MM2 Godly", price: 699000, desc: "Full Godly knife + 2K Robux", icon: "fas fa-crown", category: "game" },
+        { id: 16, name: "Limited Classic", price: 399000, desc: "Item limited cũ, 500 Robux", icon: "fas fa-clock", category: "limited" },
+        { id: 17, name: "Limited Rare", price: 799000, desc: "Item limited hiếm + 1K", icon: "fas fa-star", category: "limited" },
+        { id: 18, name: "Limited Epic", price: 1499000, desc: "Item limited siêu hiếm + 3K", icon: "fas fa-gem", category: "limited" },
+        { id: 19, name: "Limited Legend", price: 2999000, desc: "Item limited huyền thoại + 8K", icon: "fas fa-crown", category: "limited" },
+        { id: 20, name: "Adopt Me Basic", price: 549000, desc: "Pet huyền thoại, 1.5K Robux", icon: "fas fa-dog", category: "pet" },
+        { id: 21, name: "Adopt Me Mega", price: 1299000, desc: "Full pet huyền thoại + 5K", icon: "fas fa-dragon", category: "pet" },
+        { id: 22, name: "Pet Sim X", price: 799000, desc: "Pet cực mạnh, 3K Robux", icon: "fas fa-paw", category: "pet" },
+        { id: 23, name: "Pet Sim X Huge", price: 1999000, desc: "Huge pet + 10K Robux", icon: "fas fa-cat", category: "pet" },
+        { id: 24, name: "Vehicle Sport", price: 349000, desc: "Xe thể thao, 1K Robux", icon: "fas fa-car", category: "vehicle" },
+        { id: 25, name: "Vehicle Super", price: 699000, desc: "Siêu xe limited + 2K", icon: "fas fa-car-side", category: "vehicle" },
+        { id: 26, name: "Vehicle Hyper", price: 1499000, desc: "Hypercar + 5K Robux", icon: "fas fa-rocket", category: "vehicle" },
+        { id: 27, name: "Aircraft Set", price: 899000, desc: "Máy bay + trực thăng + 3K", icon: "fas fa-plane", category: "vehicle" },
+        { id: 28, name: "Tower Defense", price: 349000, desc: "Full tower, 1K Robux", icon: "fas fa-tower-cell", category: "tool" },
+        { id: 29, name: "Tower Defense Max", price: 799000, desc: "Full tower legend + 3K", icon: "fas fa-shield", category: "tool" },
+        { id: 30, name: "Anime Fighters", price: 649000, desc: "Nhân vật full skill, 2K", icon: "fas fa-fist-raised", category: "tool" },
+        { id: 31, name: "King Legacy", price: 899000, desc: "Full sword, 2.5K Robux", icon: "fas fa-crown", category: "tool" },
+        { id: 32, name: "Shindo Life", price: 599000, desc: "Full bloodline + 2K", icon: "fas fa-mask", category: "tool" },
+        { id: 33, name: "Grand Piece", price: 799000, desc: "Full fruit + 3K Robux", icon: "fas fa-ship", category: "tool" },
+        { id: 34, name: "Your Bizarre", price: 699000, desc: "Full stand + 2K Robux", icon: "fas fa-star", category: "tool" },
+        { id: 35, name: "Project Slayers", price: 549000, desc: "Full breathing + 1.5K", icon: "fas fa-wind", category: "tool" }
+    ];
+    
+    let users = JSON.parse(localStorage.getItem('quocroblox_users')) || [];
+    let orders = JSON.parse(localStorage.getItem('quocroblox_orders')) || [];
+    let currentUser = JSON.parse(localStorage.getItem('quocroblox_currentUser')) || null;
+    let cart = [];
+    let currentOrderPending = null;
+    let currentRechargeTab = 'card';
+    let currentCategory = 'all';
+    
+    const avatarList = [
+        { value: '😎', bg: '#ffaa33' }, { value: '🔥', bg: '#ff6600' }, { value: '👑', bg: '#ffcc00' },
+        { value: '🚀', bg: '#33ff99' }, { value: '⭐', bg: '#ffdd44' }, { value: '🎮', bg: '#aa66ff' },
+        { value: '💎', bg: '#33ccff' }, { value: '🐉', bg: '#ff3366' }, { value: '⚡', bg: '#ffaa44' },
+        { value: '🏆', bg: '#ffdd88' }, { value: '🎯', bg: '#44ffaa' }, { value: '💪', bg: '#ff8844' }
+    ];
+    
+    function formatPrice(p) { return p.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "đ"; }
+    function showMessage(msg) { let t=document.createElement('div'); t.className='toast-msg'; t.innerHTML=`<i class="fas fa-info-circle"></i> ${msg}`; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
+    
+    // SCROLL REVEAL
+    function initScrollReveal() {
+        const revealElements = document.querySelectorAll('.product-item, .feature-card');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting){
+                    entry.target.classList.add('revealed');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px 50px 0px' });
+        revealElements.forEach(el => observer.observe(el));
+    }
+    
+    function renderCategories() {
+        const container = document.getElementById('categoryTabs');
+        if(!container) return;
+        container.innerHTML = '';
+        categories.forEach(cat => {
+            const tab = document.createElement('div');
+            tab.className = `category-tab ${currentCategory === cat.id ? 'active' : ''}`;
+            tab.innerHTML = `<i class="${cat.icon}"></i> ${cat.name}`;
+            tab.onclick = () => { currentCategory = cat.id; renderCategories(); renderProducts(); };
+            container.appendChild(tab);
+        });
+    }
+    
+    function renderProducts() {
+        const container = document.getElementById('productsContainer');
+        if(!container) return;
+        container.innerHTML = '';
+        const filtered = currentCategory === 'all' ? allProducts : allProducts.filter(p => p.category === currentCategory);
+        filtered.forEach((product, idx) => {
+            const div = document.createElement('div');
+            div.className = 'product-item';
+            div.style.transitionDelay = `${idx * 0.03}s`;
+            div.innerHTML = `<div class="product-icon"><i class="${product.icon}"></i></div><div class="product-name">${product.name}</div><div class="product-desc">${product.desc}</div><div class="product-price">${formatPrice(product.price)}</div><button class="btn-buy" onclick="addToCart({id:${product.id}, name:'${product.name}', price:${product.price}})">Thêm vào giỏ</button>`;
+            container.appendChild(div);
+        });
+        initScrollReveal();
+        if(filtered.length === 0) container.innerHTML = '<div style="text-align:center; padding:2rem; color:#888;"><i class="fas fa-box-open"></i><p>Chưa có sản phẩm</p></div>';
+    }
+    
+    function updateCartUI() {
+        const cartItemsDiv = document.getElementById('cartItems');
+        const cartTotalDiv = document.getElementById('cartTotal');
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        const cartCountSpan = document.getElementById('cartCount');
+        const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
+        cartCountSpan.innerText = totalItems;
+        if(cart.length === 0){
+            cartItemsDiv.innerHTML = '<div style="text-align:center; padding:1rem;"><i class="fas fa-shopping-bag"></i><p>Chưa có sản phẩm</p></div>';
+            cartTotalDiv.style.display = 'none';
+            checkoutBtn.style.display = 'none';
+            return;
+        }
+        let html = '', total = 0;
+        cart.forEach((item, idx) => {
+            const it = item.price * item.quantity;
+            total += it;
+            html += `<div class="cart-item"><div><h4>${item.name}</h4><div>${formatPrice(item.price)} x ${item.quantity}</div></div><button class="remove-item" onclick="removeFromCart(${idx})"><i class="fas fa-trash"></i></button></div>`;
+        });
+        cartItemsDiv.innerHTML = html;
+        cartTotalDiv.style.display = 'block';
+        checkoutBtn.style.display = 'block';
+        document.getElementById('totalAmount').innerHTML = formatPrice(total);
+    }
+    
+    function addToCart(product) {
+        if(!currentUser) { showMessage('🔐 Vui lòng đăng nhập!'); openLoginModal(); return; }
+        const exist = cart.find(i => i.id === product.id);
+        if(exist) exist.quantity++;
+        else cart.push({ ...product, quantity: 1 });
+        updateCartUI();
+        showMessage(`✅ Đã thêm ${product.name} vào giỏ!`);
+    }
+    function removeFromCart(i) { cart.splice(i,1); updateCartUI(); showMessage('🗑️ Đã xóa'); }
+    function toggleCart() { document.getElementById('cartSidebar').classList.toggle('open'); }
+    
+    function createOrder(products, total) {
+        const newOrder = { id:'DH'+Date.now().toString().slice(-8), date:new Date().toLocaleString(), products:products.map(p=>({...p})), total, totalDisplay:formatPrice(total), status:'pending', customerEmail:currentUser?.email||'', userId:currentUser?.id, transferContent:`DH${Date.now().toString().slice(-8)}` };
+        orders.unshift(newOrder); localStorage.setItem('quocroblox_orders', JSON.stringify(orders)); return newOrder;
+    }
+    function updateOrderStatus(oid,ns) { const o=orders.find(o=>o.id===oid); if(o){o.status=ns; localStorage.setItem('quocroblox_orders', JSON.stringify(orders)); return true;} return false; }
+    
+    function openPayment() {
+        if(cart.length===0){showMessage('🛒 Giỏ hàng trống!');return;}
+        const total=cart.reduce((s,i)=>s+i.price*i.quantity,0);
+        if((currentUser.balance||0)<total){showMessage(`⚠️ Số dư không đủ!`); openRechargeModal(); return;}
+        const newOrder=createOrder(cart.map(i=>({...i})),total);
+        currentOrderPending=newOrder;
+        document.getElementById('transferContent').innerHTML=newOrder.transferContent;
+        document.getElementById('qrImage').src=`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('QuocRoblox - '+newOrder.id+' - '+newOrder.totalDisplay)}`;
+        document.getElementById('customerEmail').value=currentUser?.email||'';
+        document.getElementById('paymentModal').style.display='flex';
+        toggleCart();
+    }
+    function closePayment(){document.getElementById('paymentModal').style.display='none'; currentOrderPending=null;}
+    function checkCurrentOrder(){if(currentOrderPending){alert(`📦 MÃ ĐƠN: ${currentOrderPending.id}\n🛍️ Sản phẩm: ${currentOrderPending.products.map(p=>`${p.name} x${p.quantity}`).join(', ')}\n💰 Tổng: ${currentOrderPending.totalDisplay}`);}else{showMessage('Không có đơn hàng!');}}
+    function confirmPayment(){
+        if(!currentOrderPending){showMessage('Không có đơn cần xác nhận!');return;}
+        const total=currentOrderPending.total;
+        if((currentUser.balance||0)>=total){
+            currentUser.balance-=total;
+            const idx=users.findIndex(u=>u.id===currentUser.id);
+            if(idx!==-1)users[idx].balance=currentUser.balance;
+            localStorage.setItem('quocroblox_users', JSON.stringify(users));
+            localStorage.setItem('quocroblox_currentUser', JSON.stringify(currentUser));
+            updateBalanceDisplay();
+            updateOrderStatus(currentOrderPending.id,'paid');
+            cart=[]; updateCartUI();
+            showMessage(`🎉 Thanh toán thành công! Đã trừ ${formatPrice(total)}`);
+            closePayment(); updateHistoryUI();
+        }else{showMessage(`⚠️ Số dư không đủ!`); openRechargeModal();}
+    }
+    
+    function updateBalanceDisplay() { const b=document.getElementById('userBalance'); if(b&&currentUser) b.innerText=formatPrice(currentUser.balance||0); }
+    
+    // Avatar
+    function renderAvatarGrid(){
+        const g=document.getElementById('avatarGrid'); if(!g)return;
+        g.innerHTML='';
+        avatarList.forEach((a,i)=>{
+            const d=document.createElement('div');
+            d.className='avatar-option';
+            d.style.background=`linear-gradient(135deg, ${a.bg}, ${a.bg}dd)`;
+            d.innerHTML=a.value;
+            if(currentUser&&currentUser.avatar===i)d.classList.add('selected');
+            d.onclick=()=>selectAvatar(i);
+            g.appendChild(d);
+        });
+    }
+    function selectAvatar(i){
+        if(!currentUser)return;
+        currentUser.avatar=i;
+        const ui=users.findIndex(u=>u.id===currentUser.id);
+        if(ui!==-1)users[ui].avatar=i;
+        localStorage.setItem('quocroblox_users', JSON.stringify(users));
+        localStorage.setItem('quocroblox_currentUser', JSON.stringify(currentUser));
+        updateAvatarDisplay(); renderAvatarGrid();
+        showMessage('✅ Đã cập nhật avatar!');
+    }
+    function updateAvatarDisplay(){
+        const ad=document.getElementById('currentAvatarDisplay');
+        const ua=document.querySelector('.user-avatar');
+        if(currentUser&&currentUser.avatar!==undefined){
+            const av=avatarList[currentUser.avatar];
+            if(ad){ ad.style.background=`linear-gradient(135deg, ${av.bg}, ${av.bg}dd)`; ad.innerHTML=av.value; ad.style.fontSize='1.8rem'; }
+            if(ua){ ua.style.background=`linear-gradient(135deg, ${av.bg}, ${av.bg}dd)`; ua.innerHTML=av.value; ua.style.fontSize='0.9rem'; }
+        }
+    }
+    
+    function openProfileModal(){
+        if(!currentUser){ showMessage('Vui lòng đăng nhập!'); openLoginModal(); return; }
+        document.getElementById('profileName').value=currentUser.name||'';
+        document.getElementById('profileEmail').value=currentUser.email||'';
+        renderAvatarGrid(); updateAvatarDisplay();
+        document.getElementById('profileModal').style.display='flex';
+    }
+    function closeProfileModal(){ document.getElementById('profileModal').style.display='none'; }
+    function updateProfile(){
+        const n=document.getElementById('profileName').value;
+        const p=document.getElementById('profilePassword').value;
+        if(!n){ showMessage('Vui lòng nhập họ tên!'); return; }
+        const ui=users.findIndex(u=>u.id===currentUser.id);
+        if(ui!==-1){
+            users[ui].name=n; if(p) users[ui].password=p;
+            localStorage.setItem('quocroblox_users', JSON.stringify(users));
+            currentUser.name=n; if(p) currentUser.password=p;
+            localStorage.setItem('quocroblox_currentUser', JSON.stringify(currentUser));
+            updateAuthUI();
+            showMessage('✅ Cập nhật thành công!');
+            closeProfileModal();
+        }
+    }
+    
+    function openRechargeModal(){
+        if(!currentUser){ showMessage('Vui lòng đăng nhập!'); openLoginModal(); return; }
+        document.getElementById('rechargeModal').style.display='flex';
+        switchRechargeTab('card');
+    }
+    function closeRechargeModal(){ document.getElementById('rechargeModal').style.display='none'; }
+    function switchRechargeTab(tab){
+        currentRechargeTab=tab;
+        const cp=document.getElementById('cardRechargePanel');
+        const bp=document.getElementById('bankRechargePanel');
+        const tabs=document.querySelectorAll('.recharge-tab');
+        tabs.forEach((t,i)=>{ if((tab==='card'&&i===0)||(tab==='bank'&&i===1)) t.classList.add('active'); else t.classList.remove('active'); });
+        if(tab==='card'){ cp.style.display='block'; bp.style.display='none'; }
+        else{ cp.style.display='none'; bp.style.display='block'; }
+    }
+    function rechargeByCard(){
+        const amt=parseInt(document.getElementById('cardAmount').value);
+        const code=document.getElementById('cardCode').value;
+        const seri=document.getElementById('cardSerial').value;
+        if(!amt||amt<10000||amt>5000000){ showMessage('Mệnh giá 10.000-5.000.000đ!'); return; }
+        if(!code||!seri){ showMessage('Nhập đủ mã thẻ và seri!'); return; }
+        showMessage('⏳ Xử lý...');
+        setTimeout(()=>{
+            const bonus=Math.floor(amt*0.02);
+            const total=amt+bonus;
+            currentUser.balance=(currentUser.balance||0)+total;
+            const ui=users.findIndex(u=>u.id===currentUser.id);
+            if(ui!==-1)users[ui].balance=currentUser.balance;
+            localStorage.setItem('quocroblox_users', JSON.stringify(users));
+            localStorage.setItem('quocroblox_currentUser', JSON.stringify(currentUser));
+            updateBalanceDisplay();
+            showMessage(`🎉 Nạp thành công ${formatPrice(total)}! (+2% KM)`);
+            closeRechargeModal();
+            document.getElementById('cardAmount').value='';
+            document.getElementById('cardCode').value='';
+            document.getElementById('cardSerial').value='';
+        },1000);
+    }
+    function rechargeByBank(){
+        const amt=parseInt(document.getElementById('bankAmount').value);
+        if(!amt||amt<10000){ showMessage('Số tiền tối thiểu 10.000đ!'); return; }
+        const content=`NAP${Date.now()}`;
+        document.getElementById('bankQR').src=`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('QuocRoblox - Nạp '+formatPrice(amt)+' - '+content)}`;
+        if(confirm(`Chuyển khoản ${formatPrice(amt)} với nội dung: ${content}\nSau khi chuyển, nhấn OK!`)){
+            const bonus=Math.floor(amt*0.05);
+            const total=amt+bonus;
+            currentUser.balance=(currentUser.balance||0)+total;
+            const ui=users.findIndex(u=>u.id===currentUser.id);
+            if(ui!==-1)users[ui].balance=currentUser.balance;
+            localStorage.setItem('quocroblox_users', JSON.stringify(users));
+            localStorage.setItem('quocroblox_currentUser', JSON.stringify(currentUser));
+            updateBalanceDisplay();
+            showMessage(`🎉 Nạp thành công ${formatPrice(total)}! (+5% KM)`);
+            closeRechargeModal();
+        }
+    }
+    
+    function updateAuthUI(){
+        const ab=document.getElementById('authButton');
+        if(currentUser){
+            ab.innerHTML=`<div class="user-info" onclick="showUserMenu()"><div class="user-avatar"></div><span class="user-name">${currentUser.name}</span><i class="fas fa-chevron-down"></i></div>`;
+            updateAvatarDisplay(); updateBalanceDisplay();
+        }else{
+            ab.innerHTML=`<button class="btn-outline-light" id="btnLogin"><i class="fas fa-user-astronaut"></i> Đăng nhập</button>`;
+            document.getElementById('btnLogin')?.addEventListener('click',()=>openLoginModal());
+        }
+    }
+    function showUserMenu(){
+        if(confirm(`👤 ${currentUser.name}\n📧 ${currentUser.email}\n💰 Số dư: ${formatPrice(currentUser.balance||0)}\n\nOK: Sửa hồ sơ\nCancel: Đăng xuất`)) openProfileModal();
+        else { currentUser=null; localStorage.removeItem('quocroblox_currentUser'); updateAuthUI(); showMessage('👋 Đã đăng xuất!'); }
+    }
+    
+    function openLoginModal(){ document.getElementById('loginModal').style.display='flex'; }
+    function closeLoginModal(){ document.getElementById('loginModal').style.display='none'; }
+    function closeRegisterModal(){ document.getElementById('registerModal').style.display='none'; }
+    function showRegisterForm(){ closeLoginModal(); document.getElementById('registerModal').style.display='flex'; }
+    function handleEmailLogin(){
+        const e=document.getElementById('loginEmail').value;
+        const p=document.getElementById('loginPassword').value;
+        if(!e||!p){ showMessage('Nhập email và mật khẩu!'); return; }
+        const u=users.find(u=>u.email===e&&u.password===p);
+        if(u){
+            currentUser={id:u.id,name:u.name,email:u.email,balance:u.balance||0,avatar:u.avatar};
+            localStorage.setItem('quocroblox_currentUser', JSON.stringify(currentUser));
+            updateAuthUI(); closeLoginModal();
+            showMessage(`🎉 Chào mừng ${u.name}!`);
+            document.getElementById('loginEmail').value=''; document.getElementById('loginPassword').value='';
+        }else{ showMessage('❌ Email hoặc mật khẩu sai!'); }
+    }
+    function handleRegister(){
+        const n=document.getElementById('regName').value;
+        const e=document.getElementById('regEmail').value;
+        const p=document.getElementById('regPassword').value;
+        const c=document.getElementById('regConfirm').value;
+        if(!n||!e||!p){ showMessage('Nhập đầy đủ!'); return; }
+        if(p!==c){ showMessage('Mật khẩu không khớp!'); return; }
+        if(users.find(u=>u.email===e)){ showMessage('Email đã đăng ký!'); return; }
+        const nu={id:'user_'+Date.now(),name:n,email:e,password:p,balance:50000,avatar:0};
+        users.push(nu); localStorage.setItem('quocroblox_users', JSON.stringify(users));
+        currentUser={id:nu.id,name:nu.name,email:nu.email,balance:50000,avatar:0};
+        localStorage.setItem('quocroblox_currentUser', JSON.stringify(currentUser));
+        updateAuthUI(); closeRegisterModal();
+        showMessage(`🎉 Đăng ký thành công! Tặng 50.000đ!`);
+        document.getElementById('regName').value=''; document.getElementById('regEmail').value='';
+        document.getElementById('regPassword').value=''; document.getElementById('regConfirm').value='';
+    }
+    window.handleGoogleLogin=function(r){
+        const d=JSON.parse(atob(r.credential.split('.')[1]));
+        const e=d.email, n=d.name;
+        let u=users.find(u=>u.email===e);
+        if(!u){ u={id:'google_'+Date.now(),name:n,email:e,password:'google',balance:50000,avatar:0}; users.push(u); localStorage.setItem('quocroblox_users', JSON.stringify(users)); }
+        currentUser={id:u.id,name:u.name,email:u.email,balance:u.balance||50000,avatar:u.avatar||0};
+        localStorage.setItem('quocroblox_currentUser', JSON.stringify(currentUser));
+        updateAuthUI(); closeLoginModal();
+        showMessage(`🔐 Đăng nhập Google thành công! Chào ${n}`);
+    };
+    function initGoogleLogin(){
+        if(typeof google!=='undefined'){
+            google.accounts.id.initialize({ client_id:'1080628978672-8s9q4v0h5t6u7i8o9p0a1s2d3f4g5h6j.apps.googleusercontent.com', callback:window.handleGoogleLogin });
+            google.accounts.id.renderButton(document.getElementById('googleLoginButton'),{ theme:'outline', size:'large', width:'100%' });
+        }
+    }
+    
+    function updateHistoryUI(){
+        const hl=document.getElementById('historyList'); if(!hl) return;
+        const uo=orders.filter(o=>o.userId===currentUser?.id);
+        if(uo.length===0){ hl.innerHTML='<div style="text-align:center; padding:1rem;"><i class="fas fa-receipt"></i><p>Chưa có giao dịch</p></div>'; return; }
+        let html='';
+        uo.forEach(o=>{
+            const sc=o.status==='paid'?'status-success':'status-pending';
+            const st=o.status==='paid'?'✅ Đã thanh toán':'⏳ Chờ xử lý';
+            html+=`<div class="history-item" onclick="viewOrderDetail('${o.id}')"><div class="date">${o.date} | ${o.id}</div><div>🛍️ ${o.products.map(p=>`${p.name} x${p.quantity}`).join(', ').substring(0,40)}</div><div>💰 ${o.totalDisplay}</div><div><span class="history-status ${sc}">${st}</span></div></div>`;
+        });
+        hl.innerHTML=html;
+    }
+    function viewOrderDetail(oid){
+        const o=orders.find(o=>o.id===oid); if(!o) return;
+        const st=o.status==='paid'?'Đã thanh toán':'Chờ xử lý';
+        const sc=o.status==='paid'?'#2ed573':'#ffaa33';
+        const html=`<div><p><strong>📦 Mã đơn:</strong> ${o.id}</p><p><strong>🕐 Thời gian:</strong> ${o.date}</p><p><strong>💰 Tổng tiền:</strong> <span style="color:#ffaa33;">${o.totalDisplay}</span></p><p><strong>📌 Trạng thái:</strong> <span style="color:${sc};">${st}</span></p></div><div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 0.6rem; margin-top: 0.6rem;"><strong>Chi tiết:</strong>${o.products.map(p=>`<div><span>${p.name}</span><span>${formatPrice(p.price)} x ${p.quantity}</span></div>`).join('')}</div>`;
+        document.getElementById('orderDetailContent').innerHTML=html;
+        document.getElementById('orderDetailModal').style.display='flex';
+    }
+    function closeOrderDetail(){ document.getElementById('orderDetailModal').style.display='none'; }
+    function openHistoryModal(){ if(!currentUser){ showMessage('Vui lòng đăng nhập!'); openLoginModal(); return; } updateHistoryUI(); document.getElementById('historyModal').style.display='flex'; }
+    function closeHistoryModal(){ document.getElementById('historyModal').style.display='none'; }
+    
+    function scrollToSection(id){ document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); }
+    function scrollToTop(){ window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    window.openDiscord = function(){ window.open('https://discord.gg/quocroblox', '_blank'); showMessage('💬 Mở Discord... Hỗ trợ 24/7!'); };
+    
+    // Khởi tạo
+    window.addEventListener('load', function(){
+        renderCategories();
+        renderProducts();
+        updateCartUI();
+        updateAuthUI();
+        initGoogleLogin();
+        if(users.length===0){ users.push({id:'demo_1',name:'Demo',email:'demo@example.com',password:'123456',balance:500000,avatar:0}); localStorage.setItem('quocroblox_users', JSON.stringify(users)); }
+        if(orders.length===0){ orders.push({id:'DH001',date:new Date().toLocaleString(),products:[{id:1,name:'Acc Cơ bản',price:199000,quantity:1}],total:199000,totalDisplay:'199.000đ',status:'paid',userId:'demo_1'}); localStorage.setItem('quocroblox_orders', JSON.stringify(orders)); }
+        setTimeout(()=>{ const intro=document.getElementById('intro3d'); if(intro) intro.style.display='none'; },4500);
+        
+        const previewCard = document.getElementById('previewCard');
+        if(previewCard){
+            previewCard.addEventListener('mousemove',(e)=>{ let r=previewCard.getBoundingClientRect(); let x=(e.clientX-r.left)/r.width-0.5; let y=(e.clientY-r.top)/r.height-0.5; previewCard.style.transform=`rotateY(${x*12}deg) rotateX(${y*-8}deg)`; });
+            previewCard.addEventListener('mouseleave',()=>{ previewCard.style.transform='rotateY(0deg) rotateX(0deg)'; });
+        }
+        document.getElementById('btnExplore')?.addEventListener('click',()=>{ showMessage('🚀 Khám phá 35+ loại acc!'); setTimeout(()=>scrollToSection('products'),500); });
+        document.addEventListener('click',function(e){ const s=document.getElementById('cartSidebar'); const ci=document.querySelector('.cart-icon'); if(s&&s.classList.contains('open')&&!s.contains(e.target)&&!ci.contains(e.target)) s.classList.remove('open'); });
+        
+        initScrollReveal();
+    });
+</script>
+</body>
+</html>
